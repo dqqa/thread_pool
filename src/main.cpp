@@ -12,7 +12,7 @@ int main()
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < pool.Size(); ++i)
         v.push_back(pool.AddTask(
             [&mut]
             {

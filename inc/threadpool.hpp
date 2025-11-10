@@ -14,6 +14,7 @@ class ThreadPool
 {
 public:
     explicit ThreadPool(size_t nWorkers)
+        : stopRequired_(false)
     {
         if (nWorkers == 0)
             throw std::runtime_error("nWorkers should be > 0!");
@@ -37,7 +38,7 @@ public:
     }
 
     template <typename Func, typename ...Args>    
-    auto AddTask(Func &&func, Args &&... args)
+    auto AddTask(Func &&func, Args &&...args)
         -> std::future<std::invoke_result_t<Func, Args...>>
     {
         using Ret = std::invoke_result_t<Func, Args...>;
@@ -78,6 +79,11 @@ public:
         poolNotifier_.notify_all();
     }
 
+    size_t Size() const noexcept
+    {
+        return workers_.size();
+    }
+
 private:
     void Worker()
     {
@@ -109,7 +115,7 @@ private:
 
     std::vector<std::thread> workers_;
 
-    bool stopRequired_{false};
+    bool stopRequired_;
 };
 
 #endif // THREADPOOL_HPP__
