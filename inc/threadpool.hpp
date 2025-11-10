@@ -5,7 +5,6 @@
 #include <vector>
 #include <queue>
 #include <condition_variable>
-#include <semaphore>
 #include <mutex>
 #include <future>
 #include <functional>
@@ -31,10 +30,6 @@ public:
     ~ThreadPool() noexcept
     {
         Stop();
-
-        for (auto &w : workers_)
-            if (w.joinable())
-                w.join();
     }
 
     template <typename Func, typename ...Args>    
@@ -73,10 +68,17 @@ public:
     {
         {
             std::lock_guard l(queueMutex_);
+            if (stopRequired_)
+                return;
+
             stopRequired_ = true;
         }
 
         poolNotifier_.notify_all();
+
+        for (auto &w : workers_)
+            if (w.joinable())
+                w.join();
     }
 
     size_t Size() const noexcept
@@ -93,11 +95,12 @@ private:
 
             {
                 std::unique_lock l(queueMutex_);
-                poolNotifier_.wait(l, 
+                poolNotifier_.wait(
+                    l, 
                     [this] -> bool { return !taskQueue_.empty() || stopRequired_; }   
                 );
 
-                if (stopRequired_)
+                if (taskQueue_.empty() && stopRequired_)
                     return;
 
                 task = std::move(taskQueue_.front());

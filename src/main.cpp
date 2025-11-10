@@ -12,7 +12,7 @@ int main()
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    for (int i = 0; i < pool.Size(); ++i)
+    for (int i = 0; i < pool.Size() * 2; ++i)
         v.push_back(pool.AddTask(
             [&mut]
             {
@@ -20,13 +20,12 @@ int main()
                     std::lock_guard l(mut);
                     std::cout << "hello from: " << std::this_thread::get_id() << '\n' << std::flush;
                 }
-                std::this_thread::sleep_for(5s);
+                std::this_thread::sleep_for(1s);
                 return std::this_thread::get_id();
             }
         ));
 
-    for (auto &f : v)
-        f.wait();
+    pool.Stop();
 
     auto endTime = std::chrono::high_resolution_clock::now();
 
