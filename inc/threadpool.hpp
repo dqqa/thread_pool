@@ -40,6 +40,7 @@ public:
 
         std::packaged_task<Ret()> task(
             [func = std::forward<Func>(func), args_tuple = std::make_tuple(std::forward<Args>(args)...)]
+            mutable
             {
                 return std::apply(
                     [&](auto &&...captured_args) -> Ret {
